@@ -118,3 +118,5 @@ __pycache__
 *.npy
 *.out
 **/origin/**
+
+/riot_api/API_key.txt
