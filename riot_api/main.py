@@ -37,10 +37,7 @@ def construct_matches_dataset():
     for entry in challanger.entries[0:1]:
         player = entry.summoner
         player_match_history = player.match_history
-        if player.puuid in players_ids:
-            print("Summoner {} already in dataset".format(player.name))
-            continue
-        for i, match in enumerate(player_match_history):
+        for i, match in enumerate(player_match_history[0:2]):
             if match.id in ids_in_dataset:
                 continue
             else:
@@ -49,13 +46,13 @@ def construct_matches_dataset():
                 for user_num, participant in enumerate(match.participants):
                     summoner = participant.summoner
                     if summoner.puuid not in players_ids:
-                        summoner_match_history = [match for match in summoner.match_history]
+                        summoner_match_history = summoner.match_history
                         # print("Adding summoner {} to dataset".format(summoner.name))
                         # print("Match {current_match} is {match_num} in {summ_name} history".format(current_match=match.id,
                         #                                                                            match_num=current_match_to_history_index(match, summoner.match_history),
                         #                                                                            summ_name=summoner.name))
                         players_ids.append(summoner.puuid)
-                        players_in_dataset[summoner.puuid] = {"id": len(players_in_dataset), "match_history": summoner_match_history}
+                        players_in_dataset[summoner.puuid] = {"id": len(players_in_dataset), "match_history": [match for match in summoner_match_history]}
                     matches[str(match_index)]["User" + str(user_num)] = (players_in_dataset[summoner.puuid]["id"], current_match_to_history_index(match, players_in_dataset[summoner.puuid]["match_history"]))
                 #matches[str(match_index)] = {"id" : match.id, "match": match}
                 ids_in_dataset.append(match.id)
