@@ -27,7 +27,11 @@ def current_match_to_history_index(current_match, match_history):
     for match_num, match in enumerate(match_history):
         if current_match.id == match.id:
             return match_num
-    
+
+def create_data_array(player_records):
+    # input -> player records
+    # output -> array of shape (Number of users, number_of_features, max_history_lenght)
+    NotImplementedError
 def construct_matches_dataset():
     ids_in_dataset = []
     players_in_dataset = {}
@@ -48,7 +52,7 @@ def construct_matches_dataset():
                     if summoner.puuid not in players_ids:
                         summoner_match_history = summoner.match_history
                         # print("Adding summoner {} to dataset".format(summoner.name))
-                        # print("Match {current_match} is {match_num} in {summ_name} history".format(current_match=match.id,
+                        # print("Match {curren  t_match} is {match_num} in {summ_name} history".format(current_match=match.id,
                         #                                                                            match_num=current_match_to_history_index(match, summoner.match_history),
                         #                                                                            summ_name=summoner.name))
                         players_ids.append(summoner.puuid)
