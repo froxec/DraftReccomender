@@ -1,5 +1,7 @@
 import cassiopeia as cass
 from parameters import match_features_names
+
+
 ## TODO filter for remakes, use AI for role recognition
 
 def display_player_info(player_name, region):
@@ -16,22 +18,28 @@ def get_match_participants_features(match):
     participants_features = {}
     for i, participant in enumerate(match.participants):
         key = "User" + str(i)
-        participants_features[key] =  {feature_name: participant.stats.__getattribute__(feature_name) for feature_name in match_features_names}
+        participants_features[key] = {feature_name: participant.stats.__getattribute__(feature_name) for feature_name in
+                                      match_features_names}
     return participants_features
+
 
 def get_player_history(player_name, region):
     player = cass.Summoner(name=player_name, region=region)
     return player.match_history
+
 
 def current_match_to_history_index(current_match, match_history):
     for match_num, match in enumerate(match_history):
         if current_match.id == match.id:
             return match_num
 
+
 def create_data_array(player_records):
     # input -> player records
     # output -> array of shape (Number of users, number_of_features, max_history_lenght)
     NotImplementedError
+
+
 def construct_matches_dataset():
     ids_in_dataset = []
     players_in_dataset = {}
@@ -56,16 +64,27 @@ def construct_matches_dataset():
                         #                                                                            match_num=current_match_to_history_index(match, summoner.match_history),
                         #                                                                            summ_name=summoner.name))
                         players_ids.append(summoner.puuid)
-                        players_in_dataset[summoner.puuid] = {"id": len(players_in_dataset), "match_history": [match for match in summoner_match_history]}
-                    matches[str(match_index)]["User" + str(user_num)] = (players_in_dataset[summoner.puuid]["id"], current_match_to_history_index(match, players_in_dataset[summoner.puuid]["match_history"]))
-                #matches[str(match_index)] = {"id" : match.id, "match": match}
+                        players_in_dataset[summoner.puuid] = {"id": len(players_in_dataset),
+                                                              "match_history": [match for match in
+                                                                                summoner_match_history]}
+                    matches[str(match_index)]["User" + str(user_num)] = (players_in_dataset[summoner.puuid]["id"],
+                                                                         current_match_to_history_index(match,
+                                                                                                        players_in_dataset[
+                                                                                                            summoner.puuid][
+                                                                                                            "match_history"]))
+                    print('matches', matches)
+                # matches[str(match_index)] = {"id" : match.id, "match": match}
                 ids_in_dataset.append(match.id)
+                print('ids_in_dataset', ids_in_dataset)
     return matches
+
 
 def getAPI_key():
     file = open("API_key.txt")
     return file.read()
-cass.set_riot_api_key("RGAPI-dc1b2169-925a-4b22-99eb-4ea6b6e2d8dd")
+
+
+cass.set_riot_api_key("RGAPI-3fe686f2-d295-41d2-b0fb-97f13a95f0f4")
 
 # player_history = get_player_history("MDP Froxec", "EUW")
 # match = player_history[0]
