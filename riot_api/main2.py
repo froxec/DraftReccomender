@@ -1,6 +1,9 @@
 import csv
 import cassiopeia as cass
 from parameters import match_features_names
+import json
+from os.path import exists
+import time
 
 
 ## TODO filter for remakes, use AI for role recognition
@@ -59,12 +62,22 @@ class Players:
                                                            "match_history":
                                                                [match for match in summoner.match_history]}
 
+    def save_ids(self):
+        with open('player_ids.csv', 'w', encoding='UTF8', newline='') as f:
+            json_object = json.dumps(self.players_ids)
+            f.write(json_object)
+
+    def load_ids(self):
+        if exists('player_ids.csv'):
+            with open('player_ids.csv', 'r', encoding='UTF8', newline='') as f:
+                self.players_ids = json.load(f)
+
 
 class Matches:
-    def __init__(self):
+    def __init__(self, already_downloaded_last_match_id):
         self.matches = []
         self.ids_in_dataset = []
-        self.match_id = -1
+        self.match_id = already_downloaded_last_match_id
 
     def add_match(self, players, match):
         self.ids_in_dataset.append(match.id)
@@ -84,6 +97,27 @@ class Matches:
         is_remake = match.is_remake
         return is_remake or is_in_dataset
 
+    def save_ids(self):
+        with open('match_ids.csv', 'w', encoding='UTF8') as f:
+            json_object = json.dumps(self.ids_in_dataset)
+            f.write(json_object)
+
+    def load_ids(self):
+        if exists('match_ids.csv'):
+            with open('match_ids.csv', 'r', encoding='UTF8') as f:
+                self.ids_in_dataset = json.load(f)
+
+    def save_matches(self):
+        header = ['', 'match_id', 'time', 'User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8',
+                  'User9', 'User10']
+        is_create_file = not exists('train.csv')
+        with open('train.csv', 'a', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            if is_create_file:
+                writer.writerow(header)
+
+            writer.writerow([self.match_id] + self.matches[-1])
+
 
 def data_csv_save(match_features, match_id):
     data = list(match_features.values())
@@ -96,6 +130,8 @@ def data_csv_save(match_features, match_id):
 
 
 def data_csv_init():
+    if exists('data.csv'):
+        return
     header = ['', 'User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8', 'User9', 'User10']
 
     with open('data.csv', 'w', encoding='UTF8', newline='') as f:
@@ -103,21 +139,10 @@ def data_csv_init():
         writer.writerow(header)
 
 
-def save_train(data):
-    header = ['', 'match_id', 'time', 'User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7', 'User8', 'User9',
-              'User10']
-
-    with open('train.csv', 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(header)
-        for i, x in enumerate(data):
-            print(x)
-            writer.writerow([i] + x)
-
-
-def construct_matches_dataset():
+def construct_matches_dataset(already_downloaded_last_match_id):
     players = Players()
-    matches = Matches()
+    matches = Matches(already_downloaded_last_match_id)
+    matches.load_ids()
     data_csv_init()
     challenger = get_challenger_300()
 
@@ -130,13 +155,29 @@ def construct_matches_dataset():
             match_id = matches.add_match(players, match)
             match_features = get_match_features(match)
             data_csv_save(match_features, matches.match_id)
-            save_train(matches.matches)  # To wstawiłem tutaj a nie na koniec, żeby w dowolnym momenice móc przerwać
+            matches.save_matches()  # To wstawiłem tutaj a nie na koniec, żeby w dowolnym momenice móc przerwać
+            matches.save_ids()
+            players.save_ids()
     return players, matches
 
+def count_already_downloaded_match_id():
+    if not exists("train.csv"):
+        return -1
+
+    with open("train.csv", 'r') as fp:
+        for count, line in enumerate(fp):
+            pass
+    return count - 1
 
 def main():
-    cass.set_riot_api_key("RGAPI-778b2985-d816-414a-b097-32b206234bde")
-    construct_matches_dataset()
+    cass.set_riot_api_key("RGAPI-9967e7a6-8058-4095-8756-879c1297659a")
+    while True:
+        try:
+            construct_matches_dataset(count_already_downloaded_match_id())
+        except Exception as e:
+            print(e)
+            print('Sleeping for 30 seconds...')
+            time.sleep(30)
 
 
 if __name__ == "__main__":
